@@ -22,7 +22,7 @@ This is a local Evernote MCP (Model Context Protocol) server that connects Claud
 
 ### Local Development
 - **Install dependencies**: `npm install`
-- **Set environment variables**: Export `EVERNOTE_CONSUMER_KEY` and `EVERNOTE_CONSUMER_SECRET`
+- **Set environment variables**: Add `EVERNOTE_CONSUMER_KEY` and `EVERNOTE_CONSUMER_SECRET` to the `.env` file (both `index.js` and `mcp-server.js` load `.env` via dotenv)
 - **Enable debug logging** (optional): `export DEV_MODE=true` for detailed API request/response logging
 - **Generate SSL certificates**: `mkdir cert && openssl req -x509 -newkey rsa:4096 -keyout cert/localhost.key -out cert/localhost.crt -days 365 -nodes -subj "/C=US/ST=Local/L=Local/O=Local/OU=Local/CN=localhost"`
 - **Run server**: `npx node index.js` (requires SSL certificates and Evernote API credentials)
@@ -143,3 +143,7 @@ Diagnostic scripts remain available for future issues:
 3. **Debugging method**: Always compare working vs broken containers to find differences
 4. **Root cause vs symptoms**: gvproxy errors were symptoms, not the cause
 5. **Simplicity wins**: Working containers use simple podman-compose management only
+
+## Credential Management (March 25, 2026)
+
+`EVERNOTE_CONSUMER_KEY` and `EVERNOTE_CONSUMER_SECRET` were removed from `~/.zshrc` and now live exclusively in the project `.env` file, consistent with the credential pattern used across all `~/bin` projects. Both `index.js` and `mcp-server.js` load `.env` via `require('dotenv').config()`. The container (launched by Claude Desktop via `podman exec`) gets these vars from docker-compose.yml + `.env`, so no shell environment export is needed. If Evernote auth stops working after this change, verify the `.env` file has the consumer key/secret.

@@ -5,6 +5,8 @@
  * Implements the Model Context Protocol for Claude Desktop integration
  */
 
+require('dotenv').config();
+
 const { Server } = require('@modelcontextprotocol/sdk/server/index.js');
 const { StdioServerTransport } = require('@modelcontextprotocol/sdk/server/stdio.js');
 const { CallToolRequestSchema, ListToolsRequestSchema, InitializeRequestSchema } = require('@modelcontextprotocol/sdk/types.js');
