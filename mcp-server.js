@@ -17,6 +17,15 @@ const { createSearch } = require('./tools/createSearch');
 const { getSearch } = require('./tools/getSearch');
 const { getNote } = require('./tools/getNote');
 const { getNoteContent } = require('./tools/getNoteContent');
+const { createNote } = require('./tools/createNote');
+
+// Write operations config gate: set EVERNOTE_WRITE_OPS=create in .env to enable createNote
+const WRITE_OPS = new Set(
+  (process.env.EVERNOTE_WRITE_OPS || '')
+    .split(',')
+    .map(s => s.trim().toLowerCase())
+    .filter(Boolean)
+);
 
 /**
  * Main MCP server implementation
@@ -155,6 +164,33 @@ class EvernoteMCPServer {
               required: ['noteGuid'],
             },
           },
+          ...(WRITE_OPS.has('create') ? [{
+            name: 'createNote',
+            description: 'Create a new note in Evernote. Only available when EVERNOTE_WRITE_OPS=create is set in .env.',
+            inputSchema: {
+              type: 'object',
+              properties: {
+                title: {
+                  type: 'string',
+                  description: 'Note title (required)',
+                },
+                content: {
+                  type: 'string',
+                  description: 'Note body as plain text. Will be formatted as ENML automatically. HTML is not supported.',
+                },
+                notebookGuid: {
+                  type: 'string',
+                  description: 'GUID of the target notebook. If omitted, the note goes into the default notebook.',
+                },
+                tagNames: {
+                  type: 'array',
+                  items: { type: 'string' },
+                  description: 'List of tag names to apply. Tags are created if they do not already exist.',
+                },
+              },
+              required: ['title', 'content'],
+            },
+          }] : []),
         ],
       };
     });
@@ -184,6 +220,12 @@ class EvernoteMCPServer {
             break;
           case 'getNoteContent':
             result = await getNoteContent(args, tokenData);
+            break;
+          case 'createNote':
+            if (!WRITE_OPS.has('create')) {
+              throw new Error('createNote is not enabled. Set EVERNOTE_WRITE_OPS=create in .env to enable write operations.');
+            }
+            result = await createNote(args, tokenData);
             break;
           default:
             throw new Error(`Unknown tool: ${name}`);

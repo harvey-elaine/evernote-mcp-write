@@ -6,6 +6,7 @@
 const https = require('https');
 const querystring = require('querystring');
 const { createNoteStoreClient, callThriftMethod, closeConnection } = require('../thrift/evernote-client');
+const Types = require('../thrift/gen-nodejs/Types_types');
 
 // Check if development mode is enabled
 const DEV_MODE = process.env.DEV_MODE === 'true' || process.env.NODE_ENV === 'development';
@@ -93,6 +94,14 @@ async function makeNoteStoreRequest(method, data, tokenData) {
         break;
       case 'getNotebook':
         params.push(data.guid);
+        break;
+      case 'createNote':
+        params.push(new Types.Note({
+          title: data.title,
+          content: data.content,
+          notebookGuid: data.notebookGuid || undefined,
+          tagNames: data.tagNames || undefined,
+        }));
         break;
       default:
         // For other methods, pass all data fields as parameters

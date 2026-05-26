@@ -1,5 +1,11 @@
 # Evernote MCP Server
 
+> **Fork notice:** This project is forked from
+> [brentmid/evernote-mcp-server](https://github.com/brentmid/evernote-mcp-server)
+> and extended with write capabilities. The core Thrift integration, OAuth flow,
+> and read tools are brentmid's work. New additions (write operations, config gate,
+> setup guide, trust model documentation) are by Elaine Harvey.
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 ![Node.js](https://img.shields.io/badge/node-%3E=18.0.0-brightgreen)
 [![Last Commit](https://img.shields.io/github/last-commit/brentmid/evernote-mcp-server)](https://github.com/brentmid/evernote-mcp-server/commits/main)
@@ -987,6 +993,41 @@ The test suite ensures OAuth 1.0a implementation correctness, validates all serv
 - Cross-platform .env file token storage
 - HTTPS server with self-signed certificates
 
+## Trust Model and Data Privacy
+
+This server runs entirely on your local machine as a stdio process.
+No data passes through third-party servers.
+
+### What leaves your machine and where
+
+| Data | Destination | When |
+|---|---|---|
+| Consumer Key + Secret | `api.evernote.com` | OAuth setup only |
+| Evernote access token | `api.evernote.com` | With every API request |
+| Note titles, content, tags | `api.evernote.com` → returned to Claude Code | When reading or searching |
+| Note content to create | Claude Code → this server → `api.evernote.com` | When createNote is called |
+| Any note content in conversation | Anthropic's API | Same as anything typed to Claude directly |
+
+### What this server cannot do
+
+- The API endpoint is hardcoded to `https://api.evernote.com` — the server cannot
+  contact any other URL
+- No data is logged to files or sent to any analytics or telemetry service
+- The source code is fully auditable: all logic is in `tools/*.js` and `mcp-server.js`
+
+### Write operations gate
+
+Write tools only appear in Claude's toolset when explicitly enabled in `.env`.
+With `EVERNOTE_WRITE_OPS=` (empty), the server is functionally read-only even if
+the Evernote API key has Full Access permissions.
+
+### Evernote API key scope note
+
+A Full Access key is required for write operations. This means the key has technical
+permission to read, create, update, and delete notes — but this server only exposes
+the operations listed in `EVERNOTE_WRITE_OPS`. Setting `EVERNOTE_WRITE_OPS=create`
+means neither update nor delete tools will exist.
+
 ## 🔒 Security
 
 - No third-party data sent anywhere except to Evernote via HTTPS.
@@ -995,7 +1036,8 @@ The test suite ensures OAuth 1.0a implementation correctness, validates all serv
 
 ## 📄 License
 
-Licensed under the MIT License. See `LICENSE` file for full terms.
+Original code licensed under MIT by brentmid. See `LICENSE` for full terms.
+Additions in this fork licensed under MIT by Elaine Harvey. See `LICENSE-ADDITIONS` for full terms.
 
 ## 🙋‍♂️ Author
 

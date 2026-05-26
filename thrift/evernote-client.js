@@ -144,7 +144,20 @@ function callThriftMethod(clientData, method, params = []) {
             }
           });
           break;
-          
+
+        case 'createNote':
+          const [authToken7, noteObj] = params;
+          client.createNote(authToken7, noteObj, (err, result) => {
+            if (err) {
+              console.error(`❌ Thrift ${method} error:`, err);
+              reject(err);
+            } else {
+              console.error(`✅ Thrift ${method} completed successfully`);
+              resolve(result);
+            }
+          });
+          break;
+
         default:
           reject(new Error(`Unsupported Thrift method: ${method}`));
       }

@@ -2,9 +2,9 @@
   "claude": {
     "configPath": ".claude/config.json"
   },
-  "name": "evernote-mcp-server",
+  "name": "evernote-mcp-write",
   "version": "2.2.1",
-  "description": "A secure MCP server for Evernote integration with OAuth 1.0a authentication and automatic token expiration handling",
+  "description": "Local MCP server for Evernote — read and create notes via Claude Code. Forked from brentmid/evernote-mcp-server with write capability added.",
   "main": "index.js",
   "scripts": {
     "test": "jest",
@@ -12,8 +12,12 @@
     "test:coverage": "jest --coverage"
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": "Elaine Harvey (fork); original by brentmid",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/harvey-elaine/evernote-mcp-write.git"
+  },
   "type": "commonjs",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.12.3",

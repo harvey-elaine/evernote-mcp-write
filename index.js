@@ -26,6 +26,15 @@ const { createSearch } = require('./tools/createSearch');
 const { getSearch } = require('./tools/getSearch');
 const { getNote } = require('./tools/getNote');
 const { getNoteContent } = require('./tools/getNoteContent');
+const { createNote } = require('./tools/createNote');
+
+// Write operations config gate: set EVERNOTE_WRITE_OPS=create in .env to enable createNote
+const WRITE_OPS = new Set(
+  (process.env.EVERNOTE_WRITE_OPS || '')
+    .split(',')
+    .map(s => s.trim().toLowerCase())
+    .filter(Boolean)
+);
 
 /**
  * Create an Express application instance
@@ -279,6 +288,34 @@ async function handleJsonRpcRequest(request, res) {
             required: ['noteGuid'],
           },
         },
+        ...(WRITE_OPS.has('create') ? [{
+          type: 'tool',
+          name: 'createNote',
+          description: 'Create a new note in Evernote. Only available when EVERNOTE_WRITE_OPS=create is set in .env.',
+          parameters: {
+            type: 'object',
+            properties: {
+              title: {
+                type: 'string',
+                description: 'Note title (required)',
+              },
+              content: {
+                type: 'string',
+                description: 'Note body as plain text. Will be formatted as ENML automatically.',
+              },
+              notebookGuid: {
+                type: 'string',
+                description: 'GUID of the target notebook. If omitted, uses the default notebook.',
+              },
+              tagNames: {
+                type: 'array',
+                items: { type: 'string' },
+                description: 'List of tag names to apply.',
+              },
+            },
+            required: ['title', 'content'],
+          },
+        }] : []),
       ];
 
       return res.json({
@@ -318,6 +355,19 @@ async function handleJsonRpcRequest(request, res) {
           break;
         case 'getNoteContent':
           result = await getNoteContent(args, tokenData);
+          break;
+        case 'createNote':
+          if (!WRITE_OPS.has('create')) {
+            return res.json({
+              jsonrpc: "2.0",
+              id: request.id,
+              error: {
+                code: -32601,
+                message: 'createNote is not enabled. Set EVERNOTE_WRITE_OPS=create in .env to enable write operations.'
+              }
+            });
+          }
+          result = await createNote(args, tokenData);
           break;
         default:
           return res.json({
@@ -425,11 +475,21 @@ async function handleLegacyRequest(request, res) {
       case 'getNoteContent':
         result = await getNoteContent(args, tokenData);
         break;
-        
+
+      case 'createNote':
+        if (!WRITE_OPS.has('create')) {
+          return res.status(400).json({
+            error: 'Write operation not enabled',
+            message: 'createNote is not enabled. Set EVERNOTE_WRITE_OPS=create in .env to enable write operations.'
+          });
+        }
+        result = await createNote(args, tokenData);
+        break;
+
       default:
         return res.status(400).json({
           error: 'Unknown command',
-          message: `Unsupported command: ${command}. Supported commands: createSearch, getSearch, getNote, getNoteContent`
+          message: `Unsupported command: ${command}. Supported commands: createSearch, getSearch, getNote, getNoteContent, createNote`
         });
     }
     

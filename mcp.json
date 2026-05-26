@@ -404,6 +404,33 @@
           }
         }
       }
+    },
+    {
+      "name": "createNote",
+      "description": "Create a new note in Evernote. Only available when EVERNOTE_WRITE_OPS=create is set in server config.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "Note title (required)"
+          },
+          "content": {
+            "type": "string",
+            "description": "Note body as plain text. Will be formatted as ENML automatically. HTML is not supported — plain text only."
+          },
+          "notebookGuid": {
+            "type": "string",
+            "description": "GUID of the target notebook. If omitted, the note goes into the default notebook."
+          },
+          "tagNames": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "List of tag names to apply. Tags are created automatically if they do not already exist."
+          }
+        },
+        "required": ["title", "content"]
+      }
     }
   ]
 }
